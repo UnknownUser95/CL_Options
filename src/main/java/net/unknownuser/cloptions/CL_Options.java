@@ -54,7 +54,7 @@ public abstract class CL_Options {
 				throw new OptionAlreadyGivenException(arg);
 			}
 			
-			if(arg.requiredNextOptions != -1 && argIndex + arg.requiredNextOptions >= argsList.size()) {
+			if(argIndex != -1 && arg.requiredNextOptions != -1 && argIndex + arg.requiredNextOptions >= argsList.size()) {
 				// if the required options are longer than the given array
 				throw new TooFewArgumentsException(arg.requiredNextOptions, argsList.size() - argIndex - 1);
 			}
