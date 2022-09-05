@@ -3,12 +3,14 @@ package net.unknownuser.cloptions;
 import java.util.*;
 
 import net.unknownuser.cloptions.exceptions.*;
+import static net.unknownuser.cloptions.Option.*;
 
 public abstract class CL_Options {
 	private static ArrayList<Option> options = new ArrayList<>();
 	
 	/**
-	 * Adds an option to the option pool.
+	 * Adds an option to the option list.
+	 * 
 	 * @param option The new option.
 	 */
 	public static void addOption(Option option) {
@@ -31,72 +33,49 @@ public abstract class CL_Options {
 		ArrayList<String> argsList = new ArrayList<>();
 		argsList.addAll(Arrays.asList(args));
 		
-		for(int i = 0; i < options.size(); i++) {
-			Option arg = options.get(i);
-			int argIndex = (argsList.indexOf(arg.shortName) != -1) ? argsList.indexOf(arg.shortName) : argsList.indexOf(arg.longName);
+		for(Option opt : options) {
+			int argIndex = (argsList.indexOf(opt.shortName) != -1) ? argsList.indexOf(opt.shortName) : argsList.indexOf(opt.longName);
 			
-			if(arg.required && argIndex == -1) {
+			if(opt.required && argIndex == -1) {
 				// if the option is required, but is not given
-				throw new OptionNotGivenException(arg);
+				throw new OptionNotGivenException(opt);
 			}
 			
-			int shortIndex = argsList.indexOf(arg.shortName);
-			int longIndex = argsList.indexOf(arg.longName);
+			int shortIndex = argsList.indexOf(opt.shortName);
+			int longIndex = argsList.indexOf(opt.longName);
 			if((shortIndex != -1 && longIndex != -1) && (shortIndex != argIndex || longIndex != argIndex)) {
 				// the option is already given before
-				throw new OptionAlreadyGivenException(arg);
+				throw new OptionAlreadyGivenException(opt);
 			}
 			
-			int shortLIndex = argsList.lastIndexOf(arg.shortName);
-			int longLIndex = argsList.lastIndexOf(arg.longName);
+			int shortLIndex = argsList.lastIndexOf(opt.shortName);
+			int longLIndex = argsList.lastIndexOf(opt.longName);
 			if((shortLIndex != -1 && shortLIndex != argIndex) || (longLIndex != -1 && longLIndex != argIndex)) {
 				// if any option is given multiple times
-				throw new OptionAlreadyGivenException(arg);
+				throw new OptionAlreadyGivenException(opt);
 			}
 			
-			if(argIndex != -1 && arg.requiredNextOptions != -1 && argIndex + arg.requiredNextOptions >= argsList.size()) {
+			if(argIndex != -1 && opt.requiredNextOptions != -1 && argIndex + opt.requiredNextOptions >= argsList.size()) {
 				// if the required options are longer than the given array
-				throw new TooFewArgumentsException(arg.requiredNextOptions, argsList.size() - argIndex - 1);
+				throw new TooFewArgumentsException(opt.requiredNextOptions, argsList.size() - argIndex - 1);
 			}
 		}
 		
 		// once verified, activate all options
-		for(int i = 0; i < options.size(); i++) {
-			Option arg = options.get(i);
-			int argIndex = (argsList.indexOf(arg.shortName) != -1) ? argsList.indexOf(arg.shortName) : argsList.indexOf(arg.longName);
+		for(Option opt : options) {
+			int argIndex = (argsList.indexOf(opt.shortName) != -1) ? argsList.indexOf(opt.shortName) : argsList.indexOf(opt.longName);
 			
 			if(argIndex == -1) {
 				// the option is not required and does not exist
 				continue;
 			}
 			
-			if(arg.requiredNextOptions == -1) {
+			if(opt.requiredNextOptions == -1) {
 				// pass all other arguments
-				arg.action.apply(argsList.subList(argIndex + 1, argsList.size()));
+				opt.action.apply(argsList.subList(argIndex + 1, argsList.size()));
 			} else {
-				arg.action.apply(argsList.subList(argIndex + 1, argIndex + arg.requiredNextOptions + 1));
+				opt.action.apply(argsList.subList(argIndex + 1, argIndex + opt.requiredNextOptions + 1));
 			}
-		}
-	}
-	
-	protected static boolean stringsMatch(String str1, String str2) {
-		if(str1 == null || str2 == null) {
-			return false;
-		}
-		
-		return str1.equals(str2);
-	}
-	
-	protected static boolean nullableStringsMatch(String str1, String str2) {
-		if(str1 != str2) {
-			// one is null, the other is not
-			return false;
-		} else if(str1 == str2) {
-			// either: both are null or point to the same location on heap
-			return true;
-		} else {
-			// both aren't null and point to different heap locations
-			return str1.equals(str2);
 		}
 	}
 }
