@@ -40,7 +40,14 @@ public class Testing {
 		// the options are applied on any String[]
 		CL_Options.apply(newArgs1);
 		System.out.println();
-		CL_Options.apply(newArgs2);
+		// example for handling returns
+		switch(CL_Options.apply(newArgs2)) {
+		case FINISHED -> System.out.println("finished without errors");
+		case OPTION_ALREADY_GIVEN -> System.out.println("an option was already given");
+		case OPTION_OVERLAP -> System.out.println("the options overlap");
+		case REQUIRED_OPTION_NOT_GIVEN -> System.out.println("at least one required option was not given");
+		case TOO_FEW_ARGUMENTS -> System.out.println("too few arguments overall or for one option");
+		}
 	}
 	
 	// function references are a short form of showing what an option does
