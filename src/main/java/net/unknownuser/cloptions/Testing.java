@@ -23,30 +23,30 @@ public class Testing {
 		};
 		
 		// using function references like this is highly recommended, but not a required
-		CL_Options.addOption(getOption("-s", null, System.out::println, 3, true));
-		CL_Options.addOption(getOption("-o", "--output", Testing::printList, 1, false));
-		CL_Options.addOption(getOption("-o2", null, testInstance::instancePrintList, 1, false));
+		CL_Options.addOption(getOption("-s", null, System.out::println, 3, true, false));
+		CL_Options.addOption(getOption("-o", "--output", Testing::printList, 1, false, false));
+		CL_Options.addOption(getOption("-o2", null, testInstance::instancePrintList, 1, false, false));
 		
 		// alternatively an already created OptionAction should be given
-		CL_Options.addOption(getOption("-o3", null, action, 1, false));
+		CL_Options.addOption(getOption("-o3", null, action, 1, false, false));
 		
 		// a lambda can also be created during creation, but this is not particularly clear about what is happening
 		CL_Options.addOption(getOption("-o4", null, list -> {
 			System.out.println("printing contents of list, but from a lambda:");
 			list.forEach(System.out::println);
 			System.out.println("done");
-		}, 1, false));
+		}, 1, false, false));
 		
 		// the options are applied on any String[]
-		CL_Options.apply(newArgs1);
+		Optional<Exception> exc1 = CL_Options.apply(newArgs1);
+		if(exc1.isPresent()) {
+			exc1.get().printStackTrace();
+		}
 		System.out.println();
 		// example for handling returns
-		switch(CL_Options.apply(newArgs2)) {
-		case FINISHED -> System.out.println("finished without errors");
-		case OPTION_ALREADY_GIVEN -> System.out.println("an option was already given");
-		case OPTION_OVERLAP -> System.out.println("the options overlap");
-		case REQUIRED_OPTION_NOT_GIVEN -> System.out.println("at least one required option was not given");
-		case TOO_FEW_ARGUMENTS -> System.out.println("too few arguments overall or for one option");
+		Optional<Exception> exc2 = CL_Options.apply(newArgs2);
+		if(exc2.isPresent()) {
+			exc2.get().printStackTrace();
 		}
 	}
 	

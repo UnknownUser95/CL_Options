@@ -24,37 +24,16 @@ public abstract class CL_Options {
 		}
 		
 		if(option.required) {
-			// arg length and the arg itself
-			minArgLength += option.requiredNextOptions + 1;
+			if(option.allowOverlap) {
+				// arguments are not included
+				minArgLength += 1;
+			} else {
+				// arg length and the arg itself
+				minArgLength += option.requiredNextOptions + 1;
+			}
 		}
 		
 		options.add(option);
-	}
-	
-	/**
-	 * Return statuses for the {@link CL_Options#apply apply} method.
-	 */
-	public enum ApplyStatus {
-		/**
-		 * Either there are too few arguments overall or one option doesn't have enough arguments.
-		 */
-		TOO_FEW_ARGUMENTS,
-		/**
-		 * A required option was not given.
-		 */
-		REQUIRED_OPTION_NOT_GIVEN,
-		/**
-		 * An option was given at least twice.
-		 */
-		OPTION_ALREADY_GIVEN,
-		/**
-		 * At least two options overlap.
-		 */
-		OPTION_OVERLAP,
-		/**
-		 * Finished without errors.
-		 */
-		FINISHED;
 	}
 	
 	/**
@@ -62,19 +41,18 @@ public abstract class CL_Options {
 	 * 
 	 * @param args The command line arguments.
 	 * @param allowOverlap Whether option overlap should be checked.
-	 * @return A {@link ApplyStatus Status}. {@link ApplyStatus#FINISHED FINISHED} when no error
-	 *         occurred. The other types are returned when their specific error occurred.
+	 * @return An {@link java.util.Optional Optional} containing an error. If it's empty no error occurred.
 	 */
-	public static ApplyStatus apply(String[] args, boolean allowOverlap) {
+	public static Optional<Exception> apply(String[] args) {
 		if(args.length < minArgLength) {
-			return ApplyStatus.TOO_FEW_ARGUMENTS;
+			return Optional.of(new TooFewArgumentsException());
 		}
 		
 		ArrayList<String> argsList = new ArrayList<>();
 		argsList.addAll(Arrays.asList(args));
 		
 		// index of last required argument of last option
-		TypeHolder<Integer> lastIndex = new TypeHolder<>(-1);
+		TypeHolder<Integer> lastArgumentIndex = new TypeHolder<>(-1);
 		
 		// validation
 		for(Option opt : options) {
@@ -82,12 +60,12 @@ public abstract class CL_Options {
 			int longIndex = argsList.indexOf(opt.longName);
 			// both long and short version are present
 			if(shortIndex != -1 && longIndex != -1) {
-				return ApplyStatus.OPTION_ALREADY_GIVEN;
+				return Optional.of(new OptionAlreadyGivenException(opt));
 			}
 			int shortLastIndex = argsList.lastIndexOf(opt.shortName);
 			int longLastIndex = argsList.lastIndexOf(opt.longName);
 			if(shortIndex != shortLastIndex || longIndex != longLastIndex) {
-				return ApplyStatus.OPTION_ALREADY_GIVEN;
+				return Optional.of(new OptionAlreadyGivenException(opt));
 			}
 			
 			// cut down long and short index to one
@@ -95,7 +73,7 @@ public abstract class CL_Options {
 			if(index == -1) {
 				if(opt.required) {
 					// required option must exist
-					return ApplyStatus.REQUIRED_OPTION_NOT_GIVEN;
+					return Optional.of(new OptionNotGivenException(opt));
 				} else {
 					// optional option doesn't exist
 					continue;
@@ -103,16 +81,16 @@ public abstract class CL_Options {
 			}
 			
 			// current option is in the argument list of the last option
-			if(!allowOverlap && index <= lastIndex.get()) {
-				return ApplyStatus.OPTION_OVERLAP;
+			if(!opt.allowOverlap && index <= lastArgumentIndex.get()) {
+				return Optional.of(new OptionsOverlapException(opt));
 			}
 			
 			// not enough space for needed arguments
 			if((index + opt.requiredNextOptions) >= argsList.size()) {
-				return ApplyStatus.TOO_FEW_ARGUMENTS;
+				return Optional.of(new TooFewArgumentsException());
 			}
 			
-			lastIndex.set(index + opt.requiredNextOptions);
+			lastArgumentIndex.set(index + opt.requiredNextOptions);
 		}
 		
 		// apply options
@@ -135,17 +113,6 @@ public abstract class CL_Options {
 			}
 		}
 		
-		return ApplyStatus.FINISHED;
-	}
-	
-	/**
-	 * Runs all options with the given arguments. Doesn't allow option overlap.
-	 * 
-	 * @param args The command line arguments.
-	 * @return A {@link ApplyStatus Status}. {@link ApplyStatus#FINISHED FINISHED} when no error
-	 *         occurred. The other types are returned when their specific error occurred.
-	 */
-	public static ApplyStatus apply(String[] args) {
-		return apply(args, false);
+		return Optional.ofNullable(null);
 	}
 }

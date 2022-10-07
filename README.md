@@ -10,6 +10,6 @@ Every option has a short and a long name. Any of them can be `null` (for does no
 
 Every option also requires an action, which represent the logic of that option.
 
-The action can access later arguments, as long as requiredNextArguments is not set to 0. If requiredNextArguments is -1, it will pass **all** following arguments. Options can also overlap. Each implementation has to test itself, whether the given arguments are correct.
+The action can access later arguments, as long as requiredNextArguments is not set to 0. If requiredNextArguments is -1, it will pass all following arguments.
 
-Optionally options can be set to be required. An exception (`OptionNotGivenException`) will be thrown when a required option does not exist.
+The main method, CL_Options.apply, returns an Optional<Exception>. If an error occurred, the optional will contain that exception (use `optional.isPresent()` to check if an error has happened).

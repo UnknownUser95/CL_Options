@@ -11,6 +11,7 @@ public class Option {
 	public final String longName;
 	public final OptionAction action;
 	public final boolean required;
+	public final boolean allowOverlap;
 	/**
 	 * The following arguments passed to it in the this.action.apply() method.<br>
 	 * -1 for all following arguments.<br>
@@ -26,14 +27,16 @@ public class Option {
 	 * @param action              The action this option will do.
 	 * @param requiredNextOptions The amount of following arguments this option requires.
 	 * @param required            Whether this option is required or can be omitted.
+	 * @param allowOverlap        Whether this option can overlap with another.
 	 */
-	protected Option(String shortName, String longName, OptionAction action, int requiredNextOptions, boolean required) {
+	protected Option(String shortName, String longName, OptionAction action, int requiredNextOptions, boolean required, boolean allowOverlap) {
 		super();
 		this.shortName = shortName;
 		this.longName = longName;
 		this.action = action;
 		this.requiredNextOptions = requiredNextOptions;
 		this.required = required;
+		this.allowOverlap = allowOverlap;
 	}
 	
 	/**
@@ -44,9 +47,10 @@ public class Option {
 	 * @param action              The action this option will do.
 	 * @param requiredNextOptions The amount of following arguments this option requires.
 	 * @param required            Whether this option is required or can be omitted.
+	 * @param allowOverlap        Whether this option can overlap with other options.
 	 * @return An option with the given arguments.
 	 */
-	public static Option getOption(String shortName, String longName, OptionAction action, int requiredNextOptions, boolean required) {
+	public static Option getOption(String shortName, String longName, OptionAction action, int requiredNextOptions, boolean required, boolean allowOverlap) {
 		if(requiredNextOptions < -1) {
 			// everything under -1 is invalid
 			throw new InvalidParameterException(String.format("%d is not a valid amount", requiredNextOptions));
@@ -60,21 +64,7 @@ public class Option {
 			throw new InvalidParameterException("no action given");
 		}
 		
-		return new Option(shortName, longName, action, requiredNextOptions, required);
-	}
-	
-	/**
-	 * Creates an option with the specified parameters.<br>
-	 * The resulting option is not required.
-	 * 
-	 * @param shortName           The short name (e.g. {@code "-o"}) of this option.
-	 * @param longName            The long name (e.g. {@code "--output"}) of this option.
-	 * @param action              The action this option will do.
-	 * @param requiredNextOptions The amount of following arguments this option requires.
-	 * @return An option with the given arguments.
-	 */
-	public static Option getOption(String shortName, String longName, OptionAction action, int requiredNextOptions) {
-		return getOption(shortName, longName, action, requiredNextOptions, false);
+		return new Option(shortName, longName, action, requiredNextOptions, required, allowOverlap);
 	}
 	
 	/**
@@ -87,12 +77,12 @@ public class Option {
 	 * @return An option with the given arguments.
 	 */
 	public static Option getOption(String shortName, String longName, OptionAction action) {
-		return getOption(shortName, longName, action, 0, false);
+		return getOption(shortName, longName, action, 0, false, false);
 	}
 	
 	@Override
 	public String toString() {
-		return String.format("Option{shortName:\"%s\", longName:\"%s\", required:%s}", shortName, longName, (required ? "true" : "false "));
+		return String.format("Option{shortName:\"%s\", longName:\"%s\", required:%b, allowOverlap:%b}", shortName, longName, required, allowOverlap);
 	}
 
 	@Override
