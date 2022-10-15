@@ -6,10 +6,10 @@ public class OptionNotGivenException extends RuntimeException {
 	private static final long serialVersionUID = 4365307472366347708L;
 
 	public OptionNotGivenException() {
-		super("required options not satisfied");
+		super("At least one option doesn't have enough arguments.");
 	}
 	
 	public OptionNotGivenException(Option option) {
-		super(String.format("the option (%s) is not satisfied", option.toString()));
+		super(String.format("The option (%s) is not satisfied", option.toString()));
 	}
 }

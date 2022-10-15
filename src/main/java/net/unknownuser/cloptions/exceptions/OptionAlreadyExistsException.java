@@ -6,14 +6,14 @@ public class OptionAlreadyExistsException extends RuntimeException {
 	private static final long serialVersionUID = 5127369429202725869L;
 
 	public OptionAlreadyExistsException() {
-		super("the given option conflicts with an already added option");
+		super("The given option conflicts with an already added option");
 	}
 	
 	public OptionAlreadyExistsException(Option option) {
-		super(String.format("the option (%s) conflicts with an already added option", option.toString()));
+		super(String.format("The option (%s) conflicts with an already added option", option.toString()));
 	}
 	
 	public OptionAlreadyExistsException(Option newOption, Option oldOption) {
-		super(String.format("the new option (%s) conflicts with an already added option (%s)", newOption.toString(), oldOption.toString()));
+		super(String.format("The new option (%s) conflicts with an already added option (%s)", newOption.toString(), oldOption.toString()));
 	}
 }

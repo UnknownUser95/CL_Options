@@ -11,7 +11,7 @@ public class Testing {
 		// newArgs1 is likely what is wanted, but newArgs2 may be also wanted
 		// the implementation must test itself, whether the given arguments are correct
 		// (the - or -- before any option is not needed, but I like it more)
-		String[] newArgs1 = {"-s", "test1", "test2", "test3", "--output", "test4", "-o2", "test5", "-o3", "test6", "-o4", "test7"};
+		String[] newArgs1 = {"blocker1", "blocker2", "-s", "test1", "test2", "test3", "--output", "test4", "-o2", "test5", "-o3", "test6", "-o4", "test7"};
 		String[] newArgs2 = {"-s", "test1", "--output", "test4", "-o2", "test5", "-o3", "test6", "-o4", "test7"};
 		
 		// OptionAction can be instantiated for later use
@@ -22,24 +22,27 @@ public class Testing {
 			System.out.println("done");
 		};
 		
-		// using function references like this is highly recommended, but not a required
-		CL_Options.addOption(getOption("-s", null, System.out::println, 3, true));
-		CL_Options.addOption(getOption("-o", "--output", Testing::printList, 1, false));
-		CL_Options.addOption(getOption("-o2", null, testInstance::instancePrintList, 1, false));
+		// using function references like this is recommended, but not a required
+		CL_Options.addOption(getOption("-s", null, System.out::println, 3, true, false, false)); // allowOverlap decides if the second arguments are valid
+		CL_Options.addOption(getOption("-o", "--output", Testing::staticPrintList, 1, false, false, false));
+		CL_Options.addOption(getOption("-o2", null, testInstance::instancePrintList, 1, false, false, false));
 		
 		// alternatively an already created OptionAction should be given
-		CL_Options.addOption(getOption("-o3", null, action, 1, false));
+		CL_Options.addOption(getOption("-o3", null, action, 1, false, false, false));
 		
 		// a lambda can also be created during creation, but this is not particularly clear about what is happening
 		CL_Options.addOption(getOption("-o4", null, list -> {
 			System.out.println("printing contents of list, but from a lambda:");
 			list.forEach(System.out::println);
 			System.out.println("done");
-		}, 1, false));
+		}, 1, false, false, false));
 		
 		// the options are applied on any String[]
-		CL_Options.apply(newArgs1);
+		System.out.println("first argument array:");
+		// no error means .get() returns null
+		System.out.println(CL_Options.apply(newArgs1).get());
 		System.out.println();
+		System.out.println("second argument array:");
 		// example for handling returns
 		switch(CL_Options.apply(newArgs2)) {
 		case FINISHED -> System.out.println("finished without errors");
@@ -54,15 +57,15 @@ public class Testing {
 	// as long as the argument is (List<String> [any name]), the function will work
 	
 	// a static function
-	public static void printList(List<String> list) {
-		System.out.println("printing contents of list:");
+	public static void staticPrintList(List<String> list) {
+		System.out.println("printing contents of list, static version:");
 		list.forEach(System.out::println);
 		System.out.println("done");
 	}
 	
 	// an object bound function
 	public void instancePrintList(List<String> list) {
-		System.out.println("printing contents of list, but from a Testing instance:");
+		System.out.println("printing contents of list, instance version:");
 		list.forEach(System.out::println);
 		System.out.println("done");
 	}

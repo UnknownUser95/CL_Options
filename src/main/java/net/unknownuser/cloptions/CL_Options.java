@@ -3,7 +3,6 @@ package net.unknownuser.cloptions;
 import java.util.*;
 
 import net.unknownuser.cloptions.exceptions.*;
-import static net.unknownuser.cloptions.Option.*;
 
 public abstract class CL_Options {
 	private static ArrayList<Option> options = new ArrayList<>();
@@ -18,7 +17,9 @@ public abstract class CL_Options {
 	public static void addOption(Option option) {
 		// check, if any conflict exists
 		for(Option opt : options) {
-			if(stringsMatch(opt.shortName, option.shortName) || stringsMatch(opt.longName, option.longName)) {
+			// names have to match and
+			// both don't allow duplicates
+			if(opt.nameMatch(option) && !(opt.allowDuplicates && option.allowDuplicates)) {
 				throw new OptionAlreadyExistsException(option, opt);
 			}
 		}
@@ -38,34 +39,43 @@ public abstract class CL_Options {
 		/**
 		 * Either there are too few arguments overall or one option doesn't have enough arguments.
 		 */
-		TOO_FEW_ARGUMENTS,
+		TOO_FEW_ARGUMENTS(new TooFewArgumentsException()),
 		/**
 		 * A required option was not given.
 		 */
-		REQUIRED_OPTION_NOT_GIVEN,
+		REQUIRED_OPTION_NOT_GIVEN(new OptionNotGivenException()),
 		/**
 		 * An option was given at least twice.
 		 */
-		OPTION_ALREADY_GIVEN,
+		OPTION_ALREADY_GIVEN(new OptionAlreadyGivenException()),
 		/**
 		 * At least two options overlap.
 		 */
-		OPTION_OVERLAP,
+		OPTION_OVERLAP(new OptionsOverlapException()),
 		/**
 		 * Finished without errors.
 		 */
-		FINISHED;
+		FINISHED(null);
+		
+		private Exception exc;
+		
+		private ApplyStatus(Exception exc) {
+			this.exc = exc;
+		}
+		
+		public Exception get() {
+			return exc;
+		}
 	}
 	
 	/**
 	 * Runs all options with the given arguments.
 	 * 
-	 * @param args The command line arguments.
-	 * @param allowOverlap Whether option overlap should be checked.
+	 * @param args         The command line arguments.
 	 * @return A {@link ApplyStatus Status}. {@link ApplyStatus#FINISHED FINISHED} when no error
 	 *         occurred. The other types are returned when their specific error occurred.
 	 */
-	public static ApplyStatus apply(String[] args, boolean allowOverlap) {
+	public static ApplyStatus apply(String[] args) {
 		if(args.length < minArgLength) {
 			return ApplyStatus.TOO_FEW_ARGUMENTS;
 		}
@@ -74,7 +84,9 @@ public abstract class CL_Options {
 		argsList.addAll(Arrays.asList(args));
 		
 		// index of last required argument of last option
-		TypeHolder<Integer> lastIndex = new TypeHolder<>(-1);
+//		TypeHolder<Integer> lastIndex = new TypeHolder<>(-1);
+		int lastIndex = -1;
+		boolean lastAllowedOverlap = false;
 		
 		// validation
 		for(Option opt : options) {
@@ -103,7 +115,7 @@ public abstract class CL_Options {
 			}
 			
 			// current option is in the argument list of the last option
-			if(!allowOverlap && index <= lastIndex.get()) {
+			if(index <= lastIndex && !lastAllowedOverlap) {
 				return ApplyStatus.OPTION_OVERLAP;
 			}
 			
@@ -112,7 +124,8 @@ public abstract class CL_Options {
 				return ApplyStatus.TOO_FEW_ARGUMENTS;
 			}
 			
-			lastIndex.set(index + opt.requiredNextOptions);
+			lastIndex = index + opt.requiredNextOptions;
+			lastAllowedOverlap = opt.allowOverlap;
 		}
 		
 		// apply options
@@ -136,16 +149,5 @@ public abstract class CL_Options {
 		}
 		
 		return ApplyStatus.FINISHED;
-	}
-	
-	/**
-	 * Runs all options with the given arguments. Doesn't allow option overlap.
-	 * 
-	 * @param args The command line arguments.
-	 * @return A {@link ApplyStatus Status}. {@link ApplyStatus#FINISHED FINISHED} when no error
-	 *         occurred. The other types are returned when their specific error occurred.
-	 */
-	public static ApplyStatus apply(String[] args) {
-		return apply(args, false);
 	}
 }
