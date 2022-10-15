@@ -3,7 +3,6 @@ package net.unknownuser.cloptions;
 import java.util.*;
 
 import net.unknownuser.cloptions.exceptions.*;
-import static net.unknownuser.cloptions.Option.*;
 
 public abstract class CL_Options {
 	private static ArrayList<Option> options = new ArrayList<>();
@@ -18,7 +17,9 @@ public abstract class CL_Options {
 	public static void addOption(Option option) {
 		// check, if any conflict exists
 		for(Option opt : options) {
-			if(stringsMatch(opt.shortName, option.shortName) || stringsMatch(opt.longName, option.longName)) {
+			// names have to match and
+			// both don't allow duplicates
+			if(opt.nameMatch(option) && !(opt.allowDuplicates && option.allowDuplicates)) {
 				throw new OptionAlreadyExistsException(option, opt);
 			}
 		}
@@ -36,23 +37,58 @@ public abstract class CL_Options {
 		options.add(option);
 	}
 	
+	public enum ApplyStatus {
+		/**
+		 * Either there are too few arguments overall or one option doesn't have enough arguments.
+		 */
+		TOO_FEW_ARGUMENTS(new TooFewArgumentsException()),
+		/**
+		 * A required option was not given.
+		 */
+		REQUIRED_OPTION_NOT_GIVEN(new OptionNotGivenException()),
+		/**
+		 * An option was given at least twice.
+		 */
+		OPTION_ALREADY_GIVEN(new OptionAlreadyGivenException()),
+		/**
+		 * At least two options overlap.
+		 */
+		OPTION_OVERLAP(new OptionsOverlapException()),
+		/**
+		 * Finished without errors.
+		 */
+		FINISHED(null);
+		
+		private Exception exc;
+		
+		private ApplyStatus(Exception exc) {
+			this.exc = exc;
+		}
+		
+		public Exception get() {
+			return exc;
+		}
+	}
+	
 	/**
 	 * Runs all options with the given arguments.
 	 * 
-	 * @param args The command line arguments.
-	 * @param allowOverlap Whether option overlap should be checked.
-	 * @return An {@link java.util.Optional Optional} containing an error. If it's empty no error occurred.
+	 * @param args         The command line arguments.
+	 * @return A {@link ApplyStatus Status}. {@link ApplyStatus#FINISHED FINISHED} when no error
+	 *         occurred. The other types are returned when their specific error occurred.
 	 */
-	public static Optional<Exception> apply(String[] args) {
+	public static ApplyStatus apply(String[] args) {
 		if(args.length < minArgLength) {
-			return Optional.of(new TooFewArgumentsException());
+			return ApplyStatus.TOO_FEW_ARGUMENTS;
 		}
 		
 		ArrayList<String> argsList = new ArrayList<>();
 		argsList.addAll(Arrays.asList(args));
 		
 		// index of last required argument of last option
-		TypeHolder<Integer> lastArgumentIndex = new TypeHolder<>(-1);
+//		TypeHolder<Integer> lastIndex = new TypeHolder<>(-1);
+		int lastIndex = -1;
+		boolean lastAllowedOverlap = false;
 		
 		// validation
 		for(Option opt : options) {
@@ -60,12 +96,12 @@ public abstract class CL_Options {
 			int longIndex = argsList.indexOf(opt.longName);
 			// both long and short version are present
 			if(shortIndex != -1 && longIndex != -1) {
-				return Optional.of(new OptionAlreadyGivenException(opt));
+				return ApplyStatus.OPTION_ALREADY_GIVEN;
 			}
 			int shortLastIndex = argsList.lastIndexOf(opt.shortName);
 			int longLastIndex = argsList.lastIndexOf(opt.longName);
 			if(shortIndex != shortLastIndex || longIndex != longLastIndex) {
-				return Optional.of(new OptionAlreadyGivenException(opt));
+				return ApplyStatus.OPTION_ALREADY_GIVEN;
 			}
 			
 			// cut down long and short index to one
@@ -73,7 +109,7 @@ public abstract class CL_Options {
 			if(index == -1) {
 				if(opt.required) {
 					// required option must exist
-					return Optional.of(new OptionNotGivenException(opt));
+					return ApplyStatus.REQUIRED_OPTION_NOT_GIVEN;
 				} else {
 					// optional option doesn't exist
 					continue;
@@ -81,16 +117,17 @@ public abstract class CL_Options {
 			}
 			
 			// current option is in the argument list of the last option
-			if(!opt.allowOverlap && index <= lastArgumentIndex.get()) {
-				return Optional.of(new OptionsOverlapException(opt));
+			if(index <= lastIndex && !lastAllowedOverlap) {
+				return ApplyStatus.OPTION_OVERLAP;
 			}
 			
 			// not enough space for needed arguments
 			if((index + opt.requiredNextOptions) >= argsList.size()) {
-				return Optional.of(new TooFewArgumentsException());
+				return ApplyStatus.TOO_FEW_ARGUMENTS;
 			}
 			
-			lastArgumentIndex.set(index + opt.requiredNextOptions);
+			lastIndex = index + opt.requiredNextOptions;
+			lastAllowedOverlap = opt.allowOverlap;
 		}
 		
 		// apply options
@@ -113,6 +150,6 @@ public abstract class CL_Options {
 			}
 		}
 		
-		return Optional.ofNullable(null);
+		return ApplyStatus.FINISHED;
 	}
 }

@@ -6,7 +6,7 @@ public class OptionNotGivenException extends OptionValidationException {
 	private static final long serialVersionUID = 4365307472366347708L;
 
 	public OptionNotGivenException() {
-		super("required options not satisfied");
+		super("At least one option doesn't have enough arguments.");
 	}
 	
 	public OptionNotGivenException(Option opt) {

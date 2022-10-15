@@ -11,6 +11,7 @@ public class Option {
 	public final String longName;
 	public final OptionAction action;
 	public final boolean required;
+	public final boolean allowDuplicates;
 	public final boolean allowOverlap;
 	/**
 	 * The following arguments passed to it in the this.action.apply() method.<br>
@@ -29,13 +30,14 @@ public class Option {
 	 * @param required            Whether this option is required or can be omitted.
 	 * @param allowOverlap        Whether this option can overlap with another.
 	 */
-	protected Option(String shortName, String longName, OptionAction action, int requiredNextOptions, boolean required, boolean allowOverlap) {
+	protected Option(String shortName, String longName, OptionAction action, int requiredNextOptions, boolean required, boolean allowDuplicates, boolean allowOverlap) {
 		super();
 		this.shortName = shortName;
 		this.longName = longName;
 		this.action = action;
 		this.requiredNextOptions = requiredNextOptions;
 		this.required = required;
+		this.allowDuplicates = allowDuplicates;
 		this.allowOverlap = allowOverlap;
 	}
 	
@@ -47,10 +49,10 @@ public class Option {
 	 * @param action              The action this option will do.
 	 * @param requiredNextOptions The amount of following arguments this option requires.
 	 * @param required            Whether this option is required or can be omitted.
-	 * @param allowOverlap        Whether this option can overlap with other options.
+	 * @param allowDuplicates     Whether this option can appear multiple times.
 	 * @return An option with the given arguments.
 	 */
-	public static Option getOption(String shortName, String longName, OptionAction action, int requiredNextOptions, boolean required, boolean allowOverlap) {
+	public static Option getOption(String shortName, String longName, OptionAction action, int requiredNextOptions, boolean required, boolean allowDuplicates, boolean allowOverlap) {
 		if(requiredNextOptions < -1) {
 			// everything under -1 is invalid
 			throw new InvalidParameterException(String.format("%d is not a valid amount", requiredNextOptions));
@@ -64,7 +66,7 @@ public class Option {
 			throw new InvalidParameterException("no action given");
 		}
 		
-		return new Option(shortName, longName, action, requiredNextOptions, required, allowOverlap);
+		return new Option(shortName, longName, action, requiredNextOptions, required, allowDuplicates, allowOverlap);
 	}
 	
 	/**
@@ -77,12 +79,12 @@ public class Option {
 	 * @return An option with the given arguments.
 	 */
 	public static Option getOption(String shortName, String longName, OptionAction action) {
-		return getOption(shortName, longName, action, 0, false, false);
+		return getOption(shortName, longName, action, 0, false, false, false);
 	}
 	
 	@Override
 	public String toString() {
-		return String.format("Option{shortName:\"%s\", longName:\"%s\", required:%b, allowOverlap:%b}", shortName, longName, required, allowOverlap);
+		return String.format("Option{shortName:\"%s\", longName:\"%s\", required: %b, allowDuplicates: %b, allowOverlap: %b}", shortName, longName, required, allowDuplicates, allowOverlap);
 	}
 
 	@Override
@@ -106,6 +108,16 @@ public class Option {
 		}
 		
 		return false;
+	}
+	
+	/**
+	 * Tests whether the short <b>or</b> long names match.
+	 * 
+	 * @param option The option to compare against.
+	 * @return {@code true} if either the short or long names match, {@code false} otherwise.
+	 */
+	public boolean nameMatch(Option option) {
+		return nullableStringsMatch(shortName, option.shortName) && nullableStringsMatch(longName, option.longName);
 	}
 	
 	protected static boolean stringsMatch(String str1, String str2) {
