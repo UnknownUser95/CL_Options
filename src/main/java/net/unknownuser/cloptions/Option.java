@@ -86,12 +86,12 @@ public class Option {
 	public String toString() {
 		return String.format("Option{shortName:\"%s\", longName:\"%s\", required: %b, allowDuplicates: %b, allowOverlap: %b}", shortName, longName, required, allowDuplicates, allowOverlap);
 	}
-
+	
 	@Override
 	public int hashCode() {
 		return Objects.hash(action, longName, required, requiredNextOptions, shortName);
 	}
-
+	
 	@Override
 	public boolean equals(Object obj) {
 		if(obj == null) {

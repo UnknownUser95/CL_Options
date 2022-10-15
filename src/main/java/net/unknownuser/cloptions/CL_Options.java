@@ -73,7 +73,7 @@ public abstract class CL_Options {
 	/**
 	 * Runs all options with the given arguments.
 	 * 
-	 * @param args         The command line arguments.
+	 * @param args The command line arguments.
 	 * @return A {@link ApplyStatus Status}. {@link ApplyStatus#FINISHED FINISHED} when no error
 	 *         occurred. The other types are returned when their specific error occurred.
 	 */

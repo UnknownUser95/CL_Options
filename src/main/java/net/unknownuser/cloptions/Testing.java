@@ -11,8 +11,8 @@ public class Testing {
 		// newArgs1 is likely what is wanted, but newArgs2 may be also wanted
 		// the implementation must test itself, whether the given arguments are correct
 		// (the - or -- before any option is not needed, but I like it more)
-		String[] newArgs1 = {"blocker1", "blocker2", "-s", "test1", "test2", "test3", "--output", "test4", "-o2", "test5", "-o3", "test6", "-o4", "test7"};
-		String[] newArgs2 = {"-s", "test1", "--output", "test4", "-o2", "test5", "-o3", "test6", "-o4", "test7"};
+		String[] newArgs1 = { "blocker1", "blocker2", "-s", "test1", "test2", "test3", "--output", "test4", "-o2", "test5", "-o3", "test6", "-o4", "test7" };
+		String[] newArgs2 = { "-s", "test1", "--output", "test4", "-o2", "test5", "-o3", "test6", "-o4", "test7" };
 		
 		// OptionAction can be instantiated for later use
 		// the normal form is also functional, but the lambda is much shorter
@@ -44,14 +44,13 @@ public class Testing {
 		System.out.println();
 		System.out.println("second argument array:");
 		// example for handling returns
-		System.out.println(switch(CL_Options.apply(newArgs2)) {
+		System.out.println(switch (CL_Options.apply(newArgs2)) {
 		case FINISHED -> "finished without errors";
 		case OPTION_ALREADY_GIVEN -> "an option was already given";
 		case OPTION_OVERLAP -> "some options overlap";
 		case REQUIRED_OPTION_NOT_GIVEN -> "a required option was not given";
 		case TOO_FEW_ARGUMENTS -> "too few arguments for at least one option";
-		}
-		);
+		});
 	}
 	
 	// function references are a short form of showing what an option does
