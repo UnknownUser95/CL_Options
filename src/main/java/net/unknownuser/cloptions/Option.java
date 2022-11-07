@@ -2,6 +2,7 @@ package net.unknownuser.cloptions;
 
 import java.security.*;
 import java.util.*;
+import java.util.function.*;
 
 /**
  * An option for processing command line arguments.
@@ -9,7 +10,7 @@ import java.util.*;
 public class Option {
 	public final String shortName;
 	public final String longName;
-	public final OptionAction action;
+	public final Consumer<List<String>> action;
 	public final boolean required;
 	public final boolean allowDuplicates;
 	public final boolean allowOverlap;
@@ -30,7 +31,7 @@ public class Option {
 	 * @param required            Whether this option is required or can be omitted.
 	 * @param allowOverlap        Whether this option can overlap with another.
 	 */
-	protected Option(String shortName, String longName, OptionAction action, int requiredNextOptions, boolean required, boolean allowDuplicates, boolean allowOverlap) {
+	protected Option(String shortName, String longName, Consumer<List<String>> action, int requiredNextOptions, boolean required, boolean allowDuplicates, boolean allowOverlap) {
 		super();
 		this.shortName = shortName;
 		this.longName = longName;
@@ -52,7 +53,7 @@ public class Option {
 	 * @param allowDuplicates     Whether this option can appear multiple times.
 	 * @return An option with the given arguments.
 	 */
-	public static Option getOption(String shortName, String longName, OptionAction action, int requiredNextOptions, boolean required, boolean allowDuplicates, boolean allowOverlap) {
+	public static Option getOption(String shortName, String longName, Consumer<List<String>> action, int requiredNextOptions, boolean required, boolean allowDuplicates, boolean allowOverlap) {
 		if(requiredNextOptions < -1) {
 			// everything under -1 is invalid
 			throw new InvalidParameterException(String.format("%d is not a valid amount", requiredNextOptions));
@@ -78,7 +79,7 @@ public class Option {
 	 * @param action    The action this option will do.
 	 * @return An option with the given arguments.
 	 */
-	public static Option getOption(String shortName, String longName, OptionAction action) {
+	public static Option getOption(String shortName, String longName, Consumer<List<String>> action) {
 		return getOption(shortName, longName, action, 0, false, false, false);
 	}
 	

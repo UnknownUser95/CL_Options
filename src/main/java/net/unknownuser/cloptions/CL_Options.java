@@ -143,10 +143,10 @@ public abstract class CL_Options {
 			
 			if(opt.requiredNextOptions == -1) {
 				// pass all other arguments
-				opt.action.apply(argsList.subList(index + 1, argsList.size()));
+				opt.action.accept(argsList.subList(index + 1, argsList.size()));
 			} else {
 				// pass required options
-				opt.action.apply(argsList.subList(index + 1, index + opt.requiredNextOptions + 1));
+				opt.action.accept(argsList.subList(index + 1, index + opt.requiredNextOptions + 1));
 			}
 		}
 		

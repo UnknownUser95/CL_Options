@@ -1,6 +1,8 @@
 package net.unknownuser.cloptions;
 
 import java.util.*;
+import java.util.function.*;
+
 import static net.unknownuser.cloptions.Option.*;
 
 public class Testing {
@@ -16,7 +18,7 @@ public class Testing {
 		
 		// OptionAction can be instantiated for later use
 		// the normal form is also functional, but the lambda is much shorter
-		OptionAction action = list -> {
+		Consumer<List<String>> action = list -> {
 			System.out.println("printing contents of list, but from an OptionAction instance:");
 			list.forEach(System.out::println);
 			System.out.println("done");
